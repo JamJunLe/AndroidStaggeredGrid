@@ -342,11 +342,25 @@ public class StaggeredGridView extends ExtendableListView {
         super.onChildCreated(position, flowDown);
         if (!isHeaderOrFooter(position)) {
             // do we already have a column for this position?
-            final int column = getChildColumn(position, flowDown);
-            final int span = getChildSpan(position);
+            int column = getChildColumn(position, flowDown);
+//            if (flowDown) {
+//                GridItemRecord prevPosData = mPositionData.get(position - 1);
+//                if (prevPosData != null) {
+//                    column = prevPosData.column + prevPosData.span;
+//                    if (column >= mColumnCount)
+//                        column = 0;
+//                }
+//            }
+            
+            int span = getChildSpan(position);
+            // not apply span value if there is no space to place this child
+            if ((column + span) > mColumnCount) {
+                span = 1;
+            }
             setPositionColumn(position, column, span);
             if (DBG) Log.d(TAG, "onChildCreated position:" + position +
-                                " is in column:" + column);
+                                " is in column:" + column +
+                                " with span:" + span);
         }
         else {
             setPositionIsHeaderFooter(position);
@@ -460,9 +474,13 @@ public class StaggeredGridView extends ExtendableListView {
         layoutParams.span = span;
 
         // update tops bottoms of muti-column
-        for (int i = column; i < column + span && i < mColumnCount; i++) {
+        for (int i = column; i < (column + span) && i < mColumnCount; i++) {
             updateColumnBottomIfNeeded(i, gridChildBottom);
             updateColumnTopIfNeeded(i, gridChildTop);
+            if (DBG) Log.d(TAG, "onLayoutChild  updateBottom position:" + position +
+                    " column:" + i +
+                    " mColumnBottoms:" + mColumnBottoms[i] +
+                    " mColumnTops:" + mColumnTops[i]);
         }
 
         // subtract the margins before layout
@@ -512,6 +530,7 @@ public class StaggeredGridView extends ExtendableListView {
     private void offsetGridChild(final View child, final int position, final boolean flowDown, final int childrenLeft, final int childTop) {
         // stash the bottom and the top if it's higher positioned
         int column = getPositionColumn(position);
+        int span = getPositionSpan(position);
 
         int gridChildTop;
         int gridChildBottom;
@@ -531,6 +550,7 @@ public class StaggeredGridView extends ExtendableListView {
 
         if (DBG) Log.d(TAG, "onOffsetChild position:" + position +
                 " column:" + column +
+                " span:" + span +
                 " childTop:" + childTop +
                 " gridChildTop:" + gridChildTop +
                 " gridChildBottom:" + gridChildBottom);
@@ -539,9 +559,12 @@ public class StaggeredGridView extends ExtendableListView {
         // view's layout params
         GridLayoutParams layoutParams = (GridLayoutParams) child.getLayoutParams();
         layoutParams.column = column;
+        layoutParams.span = span;
 
-        updateColumnBottomIfNeeded(column, gridChildBottom);
-        updateColumnTopIfNeeded(column, gridChildTop);
+        for (int i = column; i < (column + span) && i < mColumnCount; i++) {
+            updateColumnBottomIfNeeded(i, gridChildBottom);
+            updateColumnTopIfNeeded(i, gridChildTop);
+        }
 
         super.onOffsetChild(child, position, flowDown, childrenLeft, gridChildTop + childTopMargin);
     }
@@ -801,7 +824,10 @@ public class StaggeredGridView extends ExtendableListView {
                     // is it a child that isn't a header
                     if (lp.viewType != ITEM_VIEW_TYPE_HEADER_OR_FOOTER &&
                             child.getTop() < nonHeaderTops[lp.column]) {
-                        nonHeaderTops[lp.column] = child.getTop();
+                        for (int col = lp.column; col < (lp.column + lp.span)
+                                && col < nonHeaderTops.length; col++) {
+                            nonHeaderTops[col] = child.getTop();
+                        }
                     }
                 }
             }

@@ -23,6 +23,7 @@ import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
+import android.util.SparseIntArray;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -272,8 +273,8 @@ public class StaggeredGridView extends ExtendableListView {
         }
         if (mColumnLefts == null || mColumnLefts.length != mColumnCount) {
             mColumnLefts = new int[mColumnCount];
-            initColumnLefts();
         }
+        initColumnLefts();
     }
 
     @Override
@@ -945,6 +946,7 @@ public class StaggeredGridView extends ExtendableListView {
         int syncPosition = Math.min(mSyncPosition, getCount() - 1);
 
         SparseArray<Double> positionHeightRatios = new SparseArray<Double>(syncPosition);
+        SparseIntArray positionSpans = new SparseIntArray(syncPosition);
         for (int pos = 0; pos < syncPosition; pos++) {
             // check for weirdness
             final GridItemRecord rec = mPositionData.get(pos);
@@ -952,6 +954,7 @@ public class StaggeredGridView extends ExtendableListView {
 
             Log.d(TAG, "onColumnSync:" + pos + " ratio:" + rec.heightRatio);
             positionHeightRatios.append(pos, rec.heightRatio);
+            positionSpans.append(pos, rec.span);
         }
 
         mPositionData.clear();
@@ -964,8 +967,10 @@ public class StaggeredGridView extends ExtendableListView {
         for (int pos = 0; pos < syncPosition; pos++) {
             final GridItemRecord rec = getOrCreateRecord(pos);
             final double heightRatio = positionHeightRatios.get(pos);
+            final int span = positionSpans.get(pos);
             final int height = (int) (mColumnWidth * heightRatio);
             rec.heightRatio = heightRatio;
+            rec.span = span;
 
             int top;
             int bottom;
@@ -986,9 +991,10 @@ public class StaggeredGridView extends ExtendableListView {
                 // the next top is the bottom for that column
                 top = mColumnBottoms[column];
                 bottom = top + height + getChildTopMargin(pos) + getChildBottomMargin();
-
-                mColumnTops[column] = top;
-                mColumnBottoms[column] = bottom;
+                for (int i = column; i < mColumnCount && i < column + span; i++) {
+                    mColumnTops[i] = top;
+                    mColumnBottoms[i] = bottom;
+                }
 
                 rec.column = column;
             }

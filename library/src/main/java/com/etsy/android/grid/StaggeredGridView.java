@@ -1279,6 +1279,7 @@ public class StaggeredGridView extends ExtendableListView {
     public static class GridListSavedState extends ListSavedState {
         int columnCount;
         int[] columnTops;
+        @SuppressWarnings("rawtypes")
         SparseArray positionData;
 
         public GridListSavedState(Parcelable superState) {
@@ -1296,6 +1297,7 @@ public class StaggeredGridView extends ExtendableListView {
             positionData = in.readSparseArray(GridItemRecord.class.getClassLoader());
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void writeToParcel(Parcel out, int flags) {
             super.writeToParcel(out, flags);
@@ -1353,6 +1355,7 @@ public class StaggeredGridView extends ExtendableListView {
         return ss;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onRestoreInstanceState(Parcelable state) {
         GridListSavedState ss = (GridListSavedState) state;

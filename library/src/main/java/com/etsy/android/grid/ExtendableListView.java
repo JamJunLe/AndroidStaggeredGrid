@@ -17,6 +17,7 @@
 
 package com.etsy.android.grid;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Rect;
@@ -1896,6 +1897,7 @@ public abstract class ExtendableListView extends AbsListView {
             postOnAnimate(this);
         }
 
+        @SuppressWarnings("unused")
         void startScroll(int distance, int duration) {
             int initialY = distance < 0 ? Integer.MAX_VALUE : 0;
             mLastFlingY = initialY;
@@ -2019,6 +2021,7 @@ public abstract class ExtendableListView extends AbsListView {
      * we have an empty view, display it.  In all the other cases, make sure that the listview
      * is VISIBLE and that the empty view is GONE (if it's not null).
      */
+    @SuppressLint("WrongCall")
     private void updateEmptyStatus() {
         boolean empty = getAdapter() == null || getAdapter().isEmpty();
         if (isInFilterMode()) {
@@ -2182,6 +2185,7 @@ public abstract class ExtendableListView extends AbsListView {
 
         private SparseArrayCompat<View> mTransientStateViews;
 
+        @SuppressWarnings("unchecked")
         public void setViewTypeCount(int viewTypeCount) {
             if (viewTypeCount < 1) {
                 throw new IllegalArgumentException("Can't have a viewTypeCount < 1");

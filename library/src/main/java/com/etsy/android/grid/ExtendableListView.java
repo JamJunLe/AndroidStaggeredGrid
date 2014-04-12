@@ -162,6 +162,10 @@ public abstract class ExtendableListView extends AbsListView {
     private ArrayList<FixedViewInfo> mHeaderViewInfos;
     private ArrayList<FixedViewInfo> mFooterViewInfos;
 
+    private View mSelectedView;
+
+    private int mSelectedPosition = INVALID_POSITION;
+
 
     public ExtendableListView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
@@ -217,14 +221,114 @@ public abstract class ExtendableListView extends AbsListView {
 
         mIsAttached = false;
     }
+    
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+        int action = event.getAction();
+
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && KeyEvent.ACTION_DOWN == action) {
+            final View view = mSelectedView;
+            if (view != null) {
+                LayoutParams lp = (LayoutParams) view.getLayoutParams();
+                if (lp != null) {
+                    // performItemClick(view, lp.position, lp.itemId);
+                    view.performClick();
+                    setSelectedView(view, lp.position);
+                    return true;
+                }
+            }
+        }
+
+        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                || keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+            if (KeyEvent.ACTION_DOWN == action && mSelectedView != null) {
+                final int direction = getFocusDirection(keyCode);
+                final View view = com.etsy.android.grid.util.FocusFinder.getInstance()
+                        .findNextFocus(this, mSelectedView, direction);
+                if (view != null) {
+                    if (view != null) {
+                        LayoutParams lp = (LayoutParams) view.getLayoutParams();
+                        setSelectedView(view, lp == null ? INVALID_POSITION : lp.position);
+                        if (direction == FOCUS_DOWN || direction == FOCUS_UP) {
+                            int deltaY = getFitDeltaY(view, direction);
+                            if (deltaY != 0) {
+                                moveTheChildren(deltaY, deltaY);
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    private int getFitDeltaY(View focus, int direction) {
+        int slop = 10;
+        if (direction == FOCUS_DOWN) {
+            int focusBottom = focus.getBottom();
+            int parentBottom = this.getMeasuredHeight();
+            if (focusBottom >= parentBottom - slop) {
+                return parentBottom - focusBottom - slop * 2;
+            }
+        } else if(direction == FOCUS_UP){
+            int focusTop = focus.getTop();
+            int parentTop = 0;
+            if (focusTop <= parentTop + slop) {
+                return parentTop - focusTop + slop * 2;
+            }
+        }
+        return 0;
+    }
+
+
+    private int getFocusDirection(int keyCode) {
+        int result = 0;
+        switch(keyCode){
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                result = View.FOCUS_LEFT;
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                result = View.FOCUS_RIGHT;
+                break;
+            case KeyEvent.KEYCODE_DPAD_UP:
+                result = View.FOCUS_UP;
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                result = View.FOCUS_DOWN;
+                break;
+        }
+        return result;
+    }
 
     @Override
     protected void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
-        // TODO : handle focus and its impact on selection - if we add item selection support
+        final boolean focused = gainFocus;
+        this.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                if (focused) {
+                    View view = getChildAt(0);
+                    if (mSelectedView != null) {
+                        view = mSelectedView;
+                    }
+                    if (view == null)
+                        return;
+                    setSelectedView(view, mFirstPosition);
+                } else {
+                    setSelectedView(null, -1);
+                }
+            }
+        }, 50);
+
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
         // TODO : handle focus and its impact on selection - if we add item selection support
     }
 
@@ -284,11 +388,24 @@ public abstract class ExtendableListView extends AbsListView {
     // //////////////////////////////////////////////////////////////////////////////////////////
     // ADAPTER VIEW - UNSUPPORTED
     //
+    
+    protected void setSelectedView(final View view, int position) {
+        if (mSelectedView != null && mSelectedView != view) {
+            mSelectedView.setSelected(false);
+        }
+        if(view == null)
+            return;
+        mSelectedView = view;
+        //view.requestFocus();
+        //view.setPressed(true);
+        view.setSelected(true);        
+        mSelectedPosition = position;
+    }
 
     @Override
     public View getSelectedView() {
         if (DBG) Log.e(TAG, "getSelectedView() is not supported in ExtendableListView yet");
-        return null;
+        return mSelectedView;
     }
 
     @Override
@@ -1422,7 +1539,7 @@ public abstract class ExtendableListView extends AbsListView {
      */
     private void setupChild(View child, int position, int y, boolean flowDown,
                             boolean selected, boolean recycled) {
-        final boolean isSelected = false; // TODO : selected && shouldShowSelector();
+        final boolean isSelected = (mSelectedPosition == position); // TODO : selected && shouldShowSelector();
         final boolean updateChildSelected = isSelected != child.isSelected();
         final int mode = mTouchMode;
         final boolean isPressed = mode > TOUCH_MODE_DOWN && mode < TOUCH_MODE_SCROLLING &&

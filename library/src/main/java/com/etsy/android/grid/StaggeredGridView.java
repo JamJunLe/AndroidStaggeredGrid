@@ -221,6 +221,10 @@ public class StaggeredGridView extends ExtendableListView {
         mGridPaddingRight = right;
         mGridPaddingBottom = bottom;
     }
+
+    public void setGridPaddingTop(int top) {
+        mGridPaddingTop = top;
+    }
     
     public void setColumnCountPortrait(int columnCountPortrait) {
     	mColumnCountPortrait = columnCountPortrait;

@@ -252,10 +252,16 @@ public class HeaderViewListAdapter implements WrapperListAdapter, Filterable, St
 
     @Override
     public int getItemViewSpanCount(int position) {
-        if (mStaggeredAdapter != null)
-            return mStaggeredAdapter.getItemViewSpanCount(position);
+        int numHeaders = getHeadersCount();
+        if (mStaggeredAdapter != null && position >= numHeaders) {
+            int adjPosition = position - numHeaders;
+            int adapterCount = mStaggeredAdapter.getCount();
+            if (adjPosition < adapterCount) {
+                return mStaggeredAdapter.getItemViewSpanCount(adjPosition);
+            }
+        }
 
-        return 1;
+        return StaggeredListAdapter.ITEM_VIEW_TYPE_SPAN_ALL;
     }
 
     public int getViewTypeCount() {

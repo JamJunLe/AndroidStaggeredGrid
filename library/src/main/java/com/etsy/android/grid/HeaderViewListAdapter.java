@@ -34,9 +34,10 @@ import java.util.ArrayList;
  *<p>This is intended as a base class; you will probably not need to
  * use this class directly in your own code.
  */
-public class HeaderViewListAdapter implements WrapperListAdapter, Filterable {
+public class HeaderViewListAdapter implements WrapperListAdapter, Filterable, StaggeredListAdapter {
 
     private final ListAdapter mAdapter;
+    private final StaggeredListAdapter mStaggeredAdapter;
 
     // These two ArrayList are assumed to NOT be null.
     // They are indeed created when declared in ListView and then shared.
@@ -56,6 +57,12 @@ public class HeaderViewListAdapter implements WrapperListAdapter, Filterable {
                                  ArrayList<StaggeredGridView.FixedViewInfo> footerViewInfos,
                                  ListAdapter adapter) {
         mAdapter = adapter;
+        if (mAdapter instanceof StaggeredListAdapter) {
+            mStaggeredAdapter = (StaggeredListAdapter) adapter;
+        } else {
+            mStaggeredAdapter = null;
+        }
+
         mIsFilterable = adapter instanceof Filterable;
 
         if (headerViewInfos == null) {
@@ -241,6 +248,14 @@ public class HeaderViewListAdapter implements WrapperListAdapter, Filterable {
         }
 
         return AdapterView.ITEM_VIEW_TYPE_HEADER_OR_FOOTER;
+    }
+
+    @Override
+    public int getItemViewSpanCount(int position) {
+        if (mStaggeredAdapter != null)
+            return mStaggeredAdapter.getItemViewSpanCount(position);
+
+        return 1;
     }
 
     public int getViewTypeCount() {

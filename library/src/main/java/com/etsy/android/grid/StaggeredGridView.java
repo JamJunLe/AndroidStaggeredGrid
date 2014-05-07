@@ -43,8 +43,6 @@ public class StaggeredGridView extends ExtendableListView {
 
     private static final int DEFAULT_COLUMNS_PORTRAIT = 2;
     private static final int DEFAULT_COLUMNS_LANDSCAPE = 3;
-    public static final int ITEM_VIEW_TYPE_SPAN_ALL = -3;
-    public static final int ITEM_VIEW_TYPE_SPAN_ONE = -4;
 
     private int mColumnCount;
     private int mItemMargin;
@@ -1081,15 +1079,11 @@ public class StaggeredGridView extends ExtendableListView {
     }
     
     private int getChildSpan(final int position) {
-        final int viewType = mAdapter.getItemViewType(position);
-        if(viewType == ITEM_VIEW_TYPE_SPAN_ALL){
+        final int spanCount = mAdapter.getItemViewSpanCount(position);
+        if(spanCount == StaggeredListAdapter.ITEM_VIEW_TYPE_SPAN_ALL){
             return mColumnCount;
         }
-        if (viewType < ITEM_VIEW_TYPE_SPAN_ALL) {
-            int span = viewType / ITEM_VIEW_TYPE_SPAN_ONE;
-            return span > mColumnCount ? mColumnCount : span;
-        }
-        return 1;
+        return Math.min(spanCount,  mColumnCount);
     }
 
     private int getChildColumn(final int position, final boolean flowDown) {

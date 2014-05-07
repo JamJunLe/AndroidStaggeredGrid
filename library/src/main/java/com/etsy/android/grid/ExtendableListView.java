@@ -102,7 +102,7 @@ public abstract class ExtendableListView extends AbsListView {
     // blocker for when we're in a layout pass
     private boolean mInLayout;
 
-    ListAdapter mAdapter;
+    StaggeredListAdapter mAdapter;
 
     private int mMotionY;
     private int mMotionX;
@@ -355,6 +355,10 @@ public abstract class ExtendableListView extends AbsListView {
         return mAdapter;
     }
 
+    public void setAdapter(final StaggeredListAdapter adapter) {
+        setAdapter((ListAdapter) adapter);
+    }
+
     @Override
     public void setAdapter(final ListAdapter adapter) {
         if (mAdapter != null) {
@@ -366,7 +370,7 @@ public abstract class ExtendableListView extends AbsListView {
             mAdapter = new HeaderViewListAdapter(mHeaderViewInfos, mFooterViewInfos, adapter);
         }
         else {
-            mAdapter = adapter;
+            mAdapter = new HeaderViewListAdapter(mHeaderViewInfos, mFooterViewInfos, adapter);
         }
 
         mDataChanged = true;

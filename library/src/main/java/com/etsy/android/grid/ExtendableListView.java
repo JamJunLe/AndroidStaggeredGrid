@@ -227,7 +227,8 @@ public abstract class ExtendableListView extends AbsListView {
         int keyCode = event.getKeyCode();
         int action = event.getAction();
 
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && KeyEvent.ACTION_DOWN == action) {
+        if ((keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)
+                && KeyEvent.ACTION_DOWN == action) {
             final View view = mSelectedView;
             if (view != null) {
                 LayoutParams lp = (LayoutParams) view.getLayoutParams();

@@ -2888,4 +2888,8 @@ public abstract class ExtendableListView extends AbsListView {
             return hasWindowFocus() && getWindowAttachCount() == mOriginalAttachCount;
         }
     }
+    
+    protected void setSelectionInt(int position) {
+        setSelection(position);
+    }
 }
